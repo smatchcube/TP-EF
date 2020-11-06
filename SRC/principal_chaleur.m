@@ -128,7 +128,7 @@ TT = UU + T_Gamma;
 ##  TT(I) = sin(pi*x)*sin(pi*y);
 ##end;
 
-disp(max_val(TT));
+disp(max(TT));
 
 % validation
 % ----------
