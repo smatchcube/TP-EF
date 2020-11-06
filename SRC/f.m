@@ -12,7 +12,7 @@ function val = f(x,y)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %val = 600*exp(-((x-1)/0.8).^2-((y-1)/0.8).^2);
-val = (1-2*pi)*sin(pi*x)*sin(pi*y);
+val = (1+2*pi)*sin(pi*x)*sin(pi*y);
 
 % A CHANGER POUR LA VALIDATION
 
