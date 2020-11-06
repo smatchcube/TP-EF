@@ -84,8 +84,15 @@ for l=1:Nbtri
    [Mel]=matM_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
 		       Coorneu(Numtri(l,3),:));
     
-    % On fait l'assemblage de la matrice globale
-    % A COMPLETER
+    % On fait l'assemblage des matrices globales
+   for i = 1:3
+      I = Numtri(l, i);
+      for j = 1:3
+         J = Numtri(l, j);
+         MM(I,J) += Mel(i,j);
+         KK(I,J) += Kel(i,j);
+      end;
+   end;
 end % for l
 
 % Matrice EF
@@ -99,18 +106,20 @@ AA = alpha*MM+KK;
 
 % Calcul du second membre F
 % -------------------------
-% A COMPLETER EN UTILISANT LA ROUTINE f.m
-FF = f(...);
-LL = ...;
+FF = zeros(Nbpt,1);
+for I = 1:Nbpt
+   FF(I) = f(Coorneu(I,1), Coorneu(I,2));
+end;
+
+LL = MM * FF;
 
 % inversion
 % ----------
-% tilde_AA ET tilde_LL SONT LA MATRICE EF ET LE VECTEUR SECOND MEMBRE
-% APRES PSEUDO_ELIMINATION 
-% ECRIRE LA ROUTINE elimine.m ET INSERER L APPEL A CETTE ROUTINE
-% A UN ENDROIT APPROPRIE
+[tilde_AA, tilde_LL] = elimine(AA, LL, Refneu);
+%tilde_AA = Temp(1);
+%tilde_LL = Temp(2);
 UU = tilde_AA\tilde_LL;
-TT = ...;
+TT = UU + T_Gamma;
 
 % validation
 % ----------
@@ -129,59 +138,59 @@ if ( strcmp(validation,'oui') || strcmp(pb_stationnaire,'oui') )
     affiche(TT, Numtri, Coorneu, sprintf('Dirichlet - %s', nom_maillage));
 end
 
-% =====================================================
-% =====================================================
-% Pour le probleme temporel
-% ---------------------------------
-if strcmp(pb_temporel,'oui')
-
-    % on initialise la condition initiale
-    % -----------------------------------
-    T_initial = condition_initiale(Coorneu(:,1),Coorneu(:,2));
-
-	% solution a t=0
-	% --------------
-    UU = ...;
-    TT = ...;
-
-    % visualisation
-    % -------------
-    figure;
-    hold on;
-    affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(0)]);
-    axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
-        290,330,290,300]);
-    hold off;
-
-	% Boucle sur les pas de temps
-	% ---------------------------
-    for k = 1:N_t
-        LL_k = zeros(Nbpt,1);
-        
-        % Calcul du second membre F a l instant k*delta t
-        % -----------------------------------------------
-		% A COMPLETER EN UTILISANT LA ROUTINE f_t.m et le terme precedent (donne par UU)
-		LL_k = ...;
-
-		% inversion
-		% ----------
-		% tilde_AA ET tilde_LL_k SONT LA MATRICE EF ET LE VECTEUR SECOND MEMBRE
-		% APRES PSEUDO_ELIMINATION 
-		% ECRIRE LA ROUTINE elimine.m ET INSERER L APPEL A CETTE ROUTINE
-		% A UN ENDROIT APPROPRIE
-        UU = tilde_AA\tilde_LL_k;
-        TT = ...;
-
-        % visualisation 
-		& -------------
-        pause(0.05)
-        affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(k*delta_t)]);
-        axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
-            290,330,290,320]);
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                                                        fin de la routine
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%2020
+##% =====================================================
+##% =====================================================
+##% Pour le probleme temporel
+##% ---------------------------------
+##if strcmp(pb_temporel,'oui')
+##
+##    % on initialise la condition initiale
+##    % -----------------------------------
+##    T_initial = condition_initiale(Coorneu(:,1),Coorneu(:,2));
+##
+##	% solution a t=0
+##	% --------------
+##    UU = ...;
+##    TT = ...;
+##
+##    % visualisation
+##    % -------------
+##    figure;
+##    hold on;
+##    affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(0)]);
+##    axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
+##        290,330,290,300]);
+##    hold off;
+##
+##	% Boucle sur les pas de temps
+##	% ---------------------------
+##    for k = 1:N_t
+##        LL_k = zeros(Nbpt,1);
+##        
+##        % Calcul du second membre F a l instant k*delta t
+##        % -----------------------------------------------
+##		% A COMPLETER EN UTILISANT LA ROUTINE f_t.m et le terme precedent (donne par UU)
+##		LL_k = ...;
+##
+##		% inversion
+##		% ----------
+##		% tilde_AA ET tilde_LL_k SONT LA MATRICE EF ET LE VECTEUR SECOND MEMBRE
+##		% APRES PSEUDO_ELIMINATION 
+##		% ECRIRE LA ROUTINE elimine.m ET INSERER L APPEL A CETTE ROUTINE
+##		% A UN ENDROIT APPROPRIE
+##        UU = tilde_AA\tilde_LL_k;
+##        TT = ...;
+##
+##        % visualisation 
+##		& -------------
+##        pause(0.05)
+##        affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(k*delta_t)]);
+##        axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
+##            290,330,290,320]);
+##    end
+##end
+##
+##%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+##%                                                        fin de la routine
+##%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%2020
 

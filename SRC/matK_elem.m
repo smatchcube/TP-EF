@@ -1,4 +1,4 @@
-function [Kel] = matK_elem(S1, S2, S3)
+function [Kel] = matK_elem(S1, S2, S3, zone)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % mat_elem :
 % calcul la matrices de raideur elementaire en P1 lagrange
@@ -7,6 +7,7 @@ function [Kel] = matK_elem(S1, S2, S3)
 %          
 % INPUT * S1, S2, S3 : les 2 coordonnees des 3 sommets du triangle 
 %                      (vecteurs reels 1x2)
+%         zone : 1 ou 2 en fonction de la zone du triangle concerné 
 %
 % OUTPUT - Kel matrice de raideur elementaire (matrice 3x3)
 %
@@ -36,11 +37,26 @@ end;
 
 % calcul de la matrice de raideur
 % -------------------------------
-Kel = zeros(3,3);
+B = [x2-x1, x3-x1;
+     y2-y1, y3-y1];    
+     
+if zone == 1
+  Kel = ones(3,3) * (1/6) * ( sigma_1(num2cell(B * [1/6; 1/6] + [x1; y1]){:})
+                            + sigma_1(num2cell(B * [2/3; 1/6] + [x1; y1]){:})
+                            + sigma_1(num2cell(B * [1/6; 2/3] + [x1; y1]){:}));
+else 
+  Kel = ones(3,3) * (1/6) * ( sigma_2(num2cell(B * [1/6; 1/6] + [x1; y1]){:})
+                            + sigma_2(num2cell(B * [2/3; 1/6] + [x1; y1]){:})
+                            + sigma_2(num2cell(B * [1/6; 2/3] + [x1; y1]){:}));
+end;
+                               
+diagrent_w = [-1, 1, 0; 
+              -1, 0, 1];
+
 for i=1:3
   for j=1:3
-	% A COMPLETER
-    Kel(i,j) = 
+    Kel(i,j) *= abs(D) * dot(inverse(transpose(B))*diagrent_w(:,i), 
+                             inverse(transpose(B))*diagrent_w(:,j));
   end; % j
 end; % i
 
