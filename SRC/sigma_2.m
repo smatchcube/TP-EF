@@ -11,7 +11,7 @@ function val = sigma_2(x,y)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-val = 1;
+val = sqrt(3)/2;
 
 % A CHANGER POUR LA VALIDATION
 

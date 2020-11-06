@@ -121,6 +121,15 @@ LL = MM * FF;
 UU = tilde_AA\tilde_LL;
 TT = UU + T_Gamma;
 
+% code pour construire le vecteur solution exacte (pour vérification)
+##for I = 1:Nbpt
+##  x = Coorneu(I, 1);
+##  y = Coorneu(I, 2)
+##  TT(I) = sin(pi*x)*sin(pi*y);
+##end;
+
+disp(max_val(TT));
+
 % validation
 % ----------
 if strcmp(validation,'oui')
