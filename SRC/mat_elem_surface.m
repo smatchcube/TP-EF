@@ -26,8 +26,8 @@ Long = sqrt((x2-x1)^2+(y2-y1)^2);
 
 % Declaration et ramplisage des matrice elementaires.
 %---------------------------------------------------
-Sel = zeros(2,2);
-	% A COMPLETER
+Sel = Long * [1/3, 1/6;
+              1/6, 1/6];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                        fin de la routine
