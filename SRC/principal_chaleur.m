@@ -30,7 +30,7 @@
 % =====================================================
 % Donnees du probleme
 % ---------------------------------
-h = 0.02;
+h = 0.05;
 system(['gmsh -2 -clmax ' num2str(h) ' -clmin ' num2str(h) ' geomChaleur.geo']);
 nom_maillage = 'geomChaleur.msh' ;
 
@@ -61,88 +61,88 @@ end
 % ---------------------------------
 [Nbpt,Nbtri,Coorneu,Refneu,Numtri,Reftri]=lecture_msh(nom_maillage);
 
-##% ----------------------
-##% calcul des matrices EF
-##% ----------------------
-##
-##% declarations
-##% ------------
-##KK = sparse(Nbpt,Nbpt); % matrice de rigidite
-##MM = sparse(Nbpt,Nbpt); % matrice de rigidite
-##LL = zeros(Nbpt,1);     % vecteur second membre
-##
-##% boucle sur les triangles
-##% ------------------------
-##for l=1:Nbtri
-##  
-##  % calcul des matrices elementaires du triangle l 
-##  
-##   [Kel]=matK_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
-##		       Coorneu(Numtri(l,3),:),Reftri(l));
-##   % LA ROUTINE matK_elem.m DOIT ETRE MODIFIEE
-##
-##   [Mel]=matM_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
-##		       Coorneu(Numtri(l,3),:));
-##    
-##    % On fait l'assemblage des matrices globales
-##   for i = 1:3
-##      I = Numtri(l, i);
-##      for j = 1:3
-##         J = Numtri(l, j);
-##         MM(I,J) += Mel(i,j);
-##         KK(I,J) += Kel(i,j);
-##      end;
-##   end;
-##end % for l
-##
-##% Matrice EF
-##% -------------------------
-##AA = alpha*MM+KK;
-##
-##% =====================================================
-##% =====================================================
-##% Pour le probleme stationnaire et la validation
-##% ---------------------------------
-##
-##% Calcul du second membre F
-##% -------------------------
-##FF = zeros(Nbpt,1);
-##for I = 1:Nbpt
-##   FF(I) = f(Coorneu(I,1), Coorneu(I,2));
-##end;
-##
-##LL = MM * FF;
-##
-##% inversion
-##% ----------
-##[tilde_AA, tilde_LL] = elimine(AA, LL, Refneu);
-##%tilde_AA = Temp(1);
-##%tilde_LL = Temp(2);
-##UU = tilde_AA\tilde_LL;
-##TT = UU + T_Gamma;
-TT = zeros(Nbpt,1);
-% code pour construire le vecteur solution exacte (pour vérification)
+% ----------------------
+% calcul des matrices EF
+% ----------------------
+
+% declarations
+% ------------
+KK = sparse(Nbpt,Nbpt); % matrice de rigidite
+MM = sparse(Nbpt,Nbpt); % matrice de rigidite
+LL = zeros(Nbpt,1);     % vecteur second membre
+
+% boucle sur les triangles
+% ------------------------
+for l=1:Nbtri
+  
+  % calcul des matrices elementaires du triangle l 
+  
+   [Kel]=matK_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
+		       Coorneu(Numtri(l,3),:),Reftri(l));
+   % LA ROUTINE matK_elem.m DOIT ETRE MODIFIEE
+
+   [Mel]=matM_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
+		       Coorneu(Numtri(l,3),:));
+    
+    % On fait l'assemblage des matrices globales
+   for i = 1:3
+      I = Numtri(l, i);
+      for j = 1:3
+         J = Numtri(l, j);
+         MM(I,J) += Mel(i,j);
+         KK(I,J) += Kel(i,j);
+      end;
+   end;
+end % for l
+
+% Matrice EF
+% -------------------------
+AA = alpha*MM+KK;
+
+% =====================================================
+% =====================================================
+% Pour le probleme stationnaire et la validation
+% ---------------------------------
+
+% Calcul du second membre F
+% -------------------------
+FF = zeros(Nbpt,1);
 for I = 1:Nbpt
-  x = Coorneu(I, 1);
-  y = Coorneu(I, 2);
-  %TT(I) = sin(pi*x)*sin(pi*y);
-  TT(I) = sigma_2(x,y);
+   FF(I) = f(Coorneu(I,1), Coorneu(I,2));
 end;
+
+LL = MM * FF;
+
+% inversion
+% ----------
+[tilde_AA, tilde_LL] = elimine(AA, LL, Refneu);
+%tilde_AA = Temp(1);
+%tilde_LL = Temp(2);
+UU = tilde_AA\tilde_LL;
+TT = UU + T_Gamma;
+
+##% code pour construire le vecteur solution exacte (pour vérification)
+##for I = 1:Nbpt
+##  x = Coorneu(I, 1);
+##  y = Coorneu(I, 2);
+##  %TT(I) = sin(pi*x)*sin(pi*y);
+##  TT(I) = sigma_2(x,y);
+##end;
 
 disp(max(TT));
 
 % validation
 % ----------
-##if strcmp(validation,'oui')
-##    UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
-##	% Calcul de l erreur L2
-##    disp('h')
-##    disp(h)
-##	  LE = [LE sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU)]; 
-##	% Calcul de l erreur H1
-##	HE = [HE sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU)];
-##	% attention de bien changer le terme source (dans FF)
-##end
+if strcmp(validation,'oui')
+    UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
+	% Calcul de l erreur L2
+    disp('h')
+    disp(h)
+	  LE = [LE sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU)]; 
+	% Calcul de l erreur H1
+	HE = [HE sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU)];
+	% attention de bien changer le terme source (dans FF)
+end
 
 % visualisation
 % -------------
