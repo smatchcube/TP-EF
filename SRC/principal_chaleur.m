@@ -34,8 +34,8 @@
 % constantes:
 h = 0.05;
 alpha = 1;
-lambda = 1;
-T_Gamma = 290;
+lambda = 0;
+T_Gamma = 0;
 
 % génération et chargement du maillage et constantes
 system(['gmsh -2 -clmax ' num2str(h) ' -clmin ' num2str(h) ' geomChaleur.geo']);
@@ -43,8 +43,8 @@ nom_maillage = 'geomChaleur.msh' ;
 [Nbpt,Nbtri,Coorneu,Refneu,Numtri,Reftri,Nbaretes,Numaretes,Refaretes]=lecture_msh(nom_maillage);
 
 % pour choisir quelle type de problème résoudre (en choisir uniquement un)
-pb_stationnaire_Fourier   = 'oui'; % exercice 1   (ne pas oublier de changer
-pb_stationnaire_Dirichlet = 'non'; % exercice 2     les fonctions appropriées
+pb_stationnaire_Fourier   = 'non'; % exercice 1   (ne pas oublier de changer
+pb_stationnaire_Dirichlet = 'oui'; % exercice 2     les fonctions appropriées
 pb_temporel               = 'non'; % exercice 3        f, Tc, sigma_1 et sigma_2) 
 
 % declarations
@@ -91,7 +91,11 @@ if strcmp(pb_stationnaire_Fourier, 'oui')
 end
 
 if strcmp(pb_stationnaire_Dirichlet, 'oui')
-  % boucle sur les arrêtes
+  % calcul de Tc approché
+  for I = 1:Nbpt
+    TT_c(I) = Tc(Coorneu(I,1), Coorneu(I,2));
+  end
+  % boucle sur les arrêtes pour la construction de SS
   % ------------------------
   for l=1:Nbaretes
     if 1 == 1%if Refaretes(l) == 2
@@ -104,8 +108,9 @@ if strcmp(pb_stationnaire_Dirichlet, 'oui')
       SS(j,j) += Sel(2,2);
     end;
   end;
-
   AA = alpha*MM+KK+lambda*SS;
+  LL = MM * FF + lambda * SS * TT_c;
+  UU = AA\LL;
 end
 
 if strcmp(pb_temporel,'oui')
@@ -145,20 +150,15 @@ end
 
 % disp(max(TT));
 
-##% Calcul des erreurs L^1 et H^1
-##% ----------
-##LE = [];
-##HE = [];
-##if strcmp(validation,'oui')
-##    UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
-##	% Calcul de l erreur L2
-##    disp('h')
-##    disp(h)
-##	  LE = [LE sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU)]; 
-##	% Calcul de l erreur H1
-##	HE = [HE sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU)];
-##	% attention de bien changer le terme source (dans FF)
-##end
+% Calcul des erreurs L^1 et H^1 (valable pour le problème 1)
+% ----------
+UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
+% Calcul de l erreur L2
+sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU); 
+% Calcul de l erreur H1
+sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU);
+% attention de bien changer le terme source (dans FF)
+end
 
 % visualisation
 % -------------

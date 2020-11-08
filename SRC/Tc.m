@@ -12,5 +12,5 @@ function val = Tc(x, y)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   
   val = 290;
- %val = cos(pi*x)*cos(pi*y); 
+  %val = cos(pi*x)*cos(pi*y);
 endfunction
