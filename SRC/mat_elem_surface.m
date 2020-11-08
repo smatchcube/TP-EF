@@ -1,4 +1,4 @@
-function [Sel] = mat_elem_surface(S1, S2, ref)
+function [Sel] = mat_elem_surface(S1, S2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % mat_elem :
 % calcul les matrices de masse surfaciques pour les frontieres 
@@ -8,7 +8,7 @@ function [Sel] = mat_elem_surface(S1, S2, ref)
 %          
 % INPUT * S1, S2 : les 2 coordonnees des 2 sommets de l'arete 
 %                      (vecteurs reels 1x2)
-%         ref    : Reference de l'arete.
+%
 %
 % OUTPUT - Sel matrice de masse surfacique elementaire pour le bord de
 % reference ref

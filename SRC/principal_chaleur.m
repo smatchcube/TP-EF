@@ -30,12 +30,13 @@
 % =====================================================
 % Donnees du probleme
 % ---------------------------------
-h = 0.05; lambda = 1;
+
+h = 0.05;
 system(['gmsh -2 -clmax ' num2str(h) ' -clmin ' num2str(h) ' geomChaleur.geo']);
 nom_maillage = 'geomChaleur.msh' ;
 
 validation = 'oui';
-pb_stationnaire = 'non';
+pb_stationnaire_Fourier = 'non';
 pb_temporel = 'non';
 
 if strcmp(validation,'oui')
@@ -100,8 +101,14 @@ end % for l
 % boucle sur les arrêtes
 % ------------------------
 for l=1:Nbaretes
-  if Refaretes(l) == 1
+  if 1 == 1%if Refaretes(l) == 2
     [Sel]=mat_elem_surface(Coorneu(Numaretes(l,1),:), Coorneu(Numaretes(l,2),:));
+    i = Numaretes(l,1);
+    j = Numaretes(l,2);
+    SS(i,i) += Sel(1,1);
+    SS(i,j) += Sel(1,2);
+    SS(j,i) += Sel(2,1);
+    SS(j,j) += Sel(2,2);
   end;
 end;
 
