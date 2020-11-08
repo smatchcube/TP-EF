@@ -31,22 +31,81 @@
 % Donnees du probleme
 % ---------------------------------
 
+% constantes:
 h = 0.05;
+alpha = 1;
+lambda = 1;
+T_Gamma = 290;
+
+% génération et chargement du maillage et constantes
 system(['gmsh -2 -clmax ' num2str(h) ' -clmin ' num2str(h) ' geomChaleur.geo']);
 nom_maillage = 'geomChaleur.msh' ;
+[Nbpt,Nbtri,Coorneu,Refneu,Numtri,Reftri,Nbaretes,Numaretes,Refaretes]=lecture_msh(nom_maillage);
 
-validation = 'oui';
-pb_stationnaire_Fourier = 'non';
-pb_temporel = 'non';
+% pour choisir quelle type de problème résoudre (en choisir uniquement un)
+pb_stationnaire_Fourier   = 'oui'; % exercice 1   (ne pas oublier de changer
+pb_stationnaire_Dirichlet = 'non'; % exercice 2     les fonctions appropriées
+pb_temporel               = 'non'; % exercice 3        f, Tc, sigma_1 et sigma_2) 
 
-if strcmp(validation,'oui')
-    alpha = 1;
-    T_Gamma = 0;
+% declarations
+% ------------
+KK = sparse(Nbpt,Nbpt); % matrice de rigidite
+MM = sparse(Nbpt,Nbpt); % matrice de masse
+SS = sparse(Nbpt,Nbpt); % matrice de surface
+FF = zeros(Nbpt,1);     % vecteur approché pour f
+TT_c = zeros(Nbpt,1);   % vecteur approché pour Tc
+
+% construction des matrices MM et KK (commun aux 3 problèmes)
+% ------------------------
+% On itère sur tout les triangles
+for l=1:Nbtri 
+   % calcul des matrices elementaires du triangle l 
+   [Kel]=matK_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
+		       Coorneu(Numtri(l,3),:),Reftri(l));
+   [Mel]=matM_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
+		       Coorneu(Numtri(l,3),:));   
+   % On fait l'assemblage des matrices globales
+   for i = 1:3
+      I = Numtri(l, i);
+      for j = 1:3
+         J = Numtri(l, j);
+         MM(I,J) += Mel(i,j);
+         KK(I,J) += Kel(i,j);
+      end;
+   end;
 end
 
-if strcmp(pb_stationnaire,'oui')
-    alpha = 1;
-    T_Gamma = 290;
+% calcul de f approché
+for I = 1:Nbpt
+    FF(I) = f(Coorneu(I,1), Coorneu(I,2));
+end
+
+% code spécifique pour résoudre le problème de Fourier (exercice 1)
+if strcmp(pb_stationnaire_Fourier, 'oui')
+  AA = alpha*MM+KK;
+  LL = MM * FF;
+  % on réalise la pseudo élimination seulement dans l'exercice 1
+  [AA, LL] = elimine(AA, LL, Refneu);
+  UU = AA\LL;
+  UU = UU + T_Gamma;
+end
+
+if strcmp(pb_stationnaire_Dirichlet, 'oui')
+  % boucle sur les arrêtes
+  % ------------------------
+  for l=1:Nbaretes
+    if 1 == 1%if Refaretes(l) == 2
+      [Sel]=mat_elem_surface(Coorneu(Numaretes(l,1),:), Coorneu(Numaretes(l,2),:));
+      i = Numaretes(l,1);
+      j = Numaretes(l,2);
+      SS(i,i) += Sel(1,1);
+      SS(i,j) += Sel(1,2);
+      SS(j,i) += Sel(2,1);
+      SS(j,j) += Sel(2,2);
+    end;
+  end;
+
+  AA = alpha*MM+KK+lambda*SS;
 end
 
 if strcmp(pb_temporel,'oui')
@@ -58,89 +117,23 @@ if strcmp(pb_temporel,'oui')
     T_Gamma = 290;
 end
 
-% lecture du maillage et affichage
-% ---------------------------------
-[Nbpt,Nbtri,Coorneu,Refneu,Numtri,Reftri,Nbaretes,Numaretes,Refaretes]=lecture_msh(nom_maillage);
 
-% ----------------------
-% calcul des matrices EF
-% ----------------------
+##% =====================================================
+##% =====================================================
+##% Pour le probleme stationnaire et la validation
+##% ---------------------------------
+##
+##% Calcul du second membre F
+##% -------------------------
+##FF = zeros(Nbpt,1);
+##TT_c = zeros(Nbpt,1);
+##for I = 1:Nbpt
+##   FF(I) = f(Coorneu(I,1), Coorneu(I,2));
+##   TT_c(I) = Tc(Coorneu(I,1), Coorneu(I,2));
+##end;
 
-% declarations
-% ------------
-KK = sparse(Nbpt,Nbpt); % matrice de rigidite
-MM = sparse(Nbpt,Nbpt); % matrice de masse
-SS = sparse(Nbpt,Nbpt); % matrice de surface
-LL = zeros(Nbpt,1);     % vecteur second membre
+% LL = MM * FF + lambda * SS * TT_c;
 
-% construction de l'ensemble des paires
-
-% boucle sur les triangles
-% ------------------------
-for l=1:Nbtri
-  
-  % calcul des matrices elementaires du triangle l 
-  
-   [Kel]=matK_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
-		       Coorneu(Numtri(l,3),:),Reftri(l));
-
-   [Mel]=matM_elem(Coorneu(Numtri(l,1),:),Coorneu(Numtri(l,2),:),...
-		       Coorneu(Numtri(l,3),:));
-    
-    % On fait l'assemblage des matrices globales
-   for i = 1:3
-      I = Numtri(l, i);
-      for j = 1:3
-         J = Numtri(l, j);
-         MM(I,J) += Mel(i,j);
-         KK(I,J) += Kel(i,j);
-      end;
-   end;
-end % for l
-
-% boucle sur les arrêtes
-% ------------------------
-for l=1:Nbaretes
-  if 1 == 1%if Refaretes(l) == 2
-    [Sel]=mat_elem_surface(Coorneu(Numaretes(l,1),:), Coorneu(Numaretes(l,2),:));
-    i = Numaretes(l,1);
-    j = Numaretes(l,2);
-    SS(i,i) += Sel(1,1);
-    SS(i,j) += Sel(1,2);
-    SS(j,i) += Sel(2,1);
-    SS(j,j) += Sel(2,2);
-  end;
-end;
-
-
-% Matrice EF
-% -------------------------
-AA = alpha*MM+KK+lambda*SS;
-
-% =====================================================
-% =====================================================
-% Pour le probleme stationnaire et la validation
-% ---------------------------------
-
-% Calcul du second membre F
-% -------------------------
-FF = zeros(Nbpt,1);
-TT_c = zeros(Nbpt,1);
-for I = 1:Nbpt
-   FF(I) = f(Coorneu(I,1), Coorneu(I,2));
-   TT_c(I) = Tc(Coorneu(I,1), Coorneu(I,2));
-end;
-
-LL = MM * FF + lambda * SS * TT_c;
-
-% inversion
-% ----------
-%[tilde_AA, tilde_LL] = elimine(AA, LL, Refneu);
-%tilde_AA = Temp(1);
-%tilde_LL = Temp(2);
-%UU = tilde_AA\tilde_LL;
-UU = AA\LL;
-TT = UU + T_Gamma;
 
 ##% code pour construire le vecteur solution exacte (pour vérification)
 ##for I = 1:Nbpt
@@ -150,28 +143,26 @@ TT = UU + T_Gamma;
 ##  %TT(I) = sigma_2(x,y);
 ##end;
 
-disp(max(TT));
+% disp(max(TT));
 
-% validation
-% ----------
-LE = [];
-HE = [];
-if strcmp(validation,'oui')
-    UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
-	% Calcul de l erreur L2
-    disp('h')
-    disp(h)
-	  LE = [LE sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU)]; 
-	% Calcul de l erreur H1
-	HE = [HE sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU)];
-	% attention de bien changer le terme source (dans FF)
-end
+##% Calcul des erreurs L^1 et H^1
+##% ----------
+##LE = [];
+##HE = [];
+##if strcmp(validation,'oui')
+##    UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
+##	% Calcul de l erreur L2
+##    disp('h')
+##    disp(h)
+##	  LE = [LE sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU)]; 
+##	% Calcul de l erreur H1
+##	HE = [HE sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU)];
+##	% attention de bien changer le terme source (dans FF)
+##end
 
 % visualisation
 % -------------
-if ( strcmp(validation,'oui') || strcmp(pb_stationnaire,'oui') )
-    affiche(TT, Numtri, Coorneu, sprintf('Dirichlet - %s', nom_maillage));
-end
+affiche(UU, Numtri, Coorneu, sprintf('Dirichlet - %s', nom_maillage));
 
 ##% =====================================================
 ##% =====================================================
