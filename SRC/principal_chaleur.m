@@ -34,7 +34,7 @@
 % constantes:
 h = 0.05;
 alpha = 1;
-lambda = 0;
+lambda = 1;
 T_Gamma = 0;
 
 % génération et chargement du maillage et constantes
@@ -158,7 +158,6 @@ sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*
 % Calcul de l erreur H1
 sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU);
 % attention de bien changer le terme source (dans FF)
-end
 
 % visualisation
 % -------------
