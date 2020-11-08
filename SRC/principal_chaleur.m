@@ -44,8 +44,8 @@ nom_maillage = 'geomChaleur.msh' ;
 
 % pour choisir quelle type de problème résoudre (en choisir uniquement un)
 pb_stationnaire_Fourier   = 'non'; % exercice 1   (ne pas oublier de changer
-pb_stationnaire_Dirichlet = 'oui'; % exercice 2     les fonctions appropriées
-pb_temporel               = 'non'; % exercice 3        f, Tc, sigma_1 et sigma_2) 
+pb_stationnaire_Dirichlet = 'non'; % exercice 2     les fonctions appropriées
+pb_temporel               = 'oui'; % exercice 3        f, Tc, sigma_1 et sigma_2) 
 
 % declarations
 % ------------
@@ -98,47 +98,18 @@ if strcmp(pb_stationnaire_Dirichlet, 'oui')
   % boucle sur les arrêtes pour la construction de SS
   % ------------------------
   for l=1:Nbaretes
-    if 1 == 1%if Refaretes(l) == 2
-      [Sel]=mat_elem_surface(Coorneu(Numaretes(l,1),:), Coorneu(Numaretes(l,2),:));
-      i = Numaretes(l,1);
-      j = Numaretes(l,2);
-      SS(i,i) += Sel(1,1);
-      SS(i,j) += Sel(1,2);
-      SS(j,i) += Sel(2,1);
-      SS(j,j) += Sel(2,2);
-    end;
+     [Sel]=mat_elem_surface(Coorneu(Numaretes(l,1),:), Coorneu(Numaretes(l,2),:));
+     i = Numaretes(l,1);
+     j = Numaretes(l,2);
+     SS(i,i) += Sel(1,1);
+     SS(i,j) += Sel(1,2);
+     SS(j,i) += Sel(2,1);
+     SS(j,j) += Sel(2,2);
   end;
   AA = alpha*MM+KK+lambda*SS;
   LL = MM * FF + lambda * SS * TT_c;
   UU = AA\LL;
 end
-
-if strcmp(pb_temporel,'oui')
-    Tps_initial = 0;
-    Tps_final = 1;
-    delta_t = 0.01;
-    alpha = 1/delta_t;
-    N_t = (Tps_final-Tps_initial)/delta_t; % le nombre d'iterations necessaires
-    T_Gamma = 290;
-end
-
-
-##% =====================================================
-##% =====================================================
-##% Pour le probleme stationnaire et la validation
-##% ---------------------------------
-##
-##% Calcul du second membre F
-##% -------------------------
-##FF = zeros(Nbpt,1);
-##TT_c = zeros(Nbpt,1);
-##for I = 1:Nbpt
-##   FF(I) = f(Coorneu(I,1), Coorneu(I,2));
-##   TT_c(I) = Tc(Coorneu(I,1), Coorneu(I,2));
-##end;
-
-% LL = MM * FF + lambda * SS * TT_c;
-
 
 ##% code pour construire le vecteur solution exacte (pour vérification)
 ##for I = 1:Nbpt
@@ -148,74 +119,86 @@ end
 ##  %TT(I) = sigma_2(x,y);
 ##end;
 
+% Si l'on souhaite afficher la valeur max de la solution
 % disp(max(TT));
 
-% Calcul des erreurs L^1 et H^1 (valable pour le problème 1)
-% ----------
-UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
-% Calcul de l erreur L2
-sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU); 
-% Calcul de l erreur H1
-sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU);
-% attention de bien changer le terme source (dans FF)
+if strcmp(pb_stationnaire_Dirichlet, 'oui')
+  % Calcul des erreurs L^1 et H^1 (valable pour le problème 1)
+  % ----------
+  UU_exact = sin(pi*Coorneu(:,1)).*sin(pi*Coorneu(:,2));
+  % Calcul de l erreur L2
+  sqrt( transpose(UU_exact)*MM*UU_exact+transpose(UU)*MM*UU-2*transpose(UU_exact)*MM*UU); 
+  % Calcul de l erreur H1
+  sqrt( transpose(UU_exact)*KK*UU_exact+transpose(UU)*KK*UU-2*transpose(UU_exact)*KK*UU);
+  % attention de bien changer le terme source (dans FF)
+end
 
-% visualisation
+% visualisation pour les problèmes stationnaires exercices 1 et 2
 % -------------
-affiche(UU, Numtri, Coorneu, sprintf('Dirichlet - %s', nom_maillage));
+if strcmp(pb_stationnaire_Dirichlet, 'oui') || strcmp(pb_stationnaire_Fourier, 'oui')
+  affiche(UU, Numtri, Coorneu, sprintf('Dirichlet - %s', nom_maillage));
+end
+% =====================================================
+% =====================================================
+% Pour le probleme temporel
+% ---------------------------------
+if strcmp(pb_temporel,'oui')
+    Tps_initial = 0;
+    Tps_final = 1;
+    delta_t = 0.01;
+    alpha = 1/delta_t;
+    N_t = (Tps_final-Tps_initial)/delta_t; % le nombre d'iterations necessaires
+    T_Gamma = 290;
+    % on initialise la condition initiale
+    % -----------------------------------
+    T_initial = zeros(Nbpt,1);
+    for I = 1:Nbpt
+      T_initial(I) = condition_initiale(Coorneu(I,1), Coorneu(I,2));
+    end
+    
+    
+	  % solution a t=0
+	  % --------------
+    UU = T_initial - T_Gamma ;
+    TT = UU + T_Gamma;
 
-##% =====================================================
-##% =====================================================
-##% Pour le probleme temporel
-##% ---------------------------------
-##if strcmp(pb_temporel,'oui')
-##
-##    % on initialise la condition initiale
-##    % -----------------------------------
-##    T_initial = condition_initiale(Coorneu(:,1),Coorneu(:,2));
-##
-##	% solution a t=0
-##	% --------------
-##    UU = ...;
-##    TT = ...;
-##
-##    % visualisation
-##    % -------------
-##    figure;
-##    hold on;
-##    affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(0)]);
-##    axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
-##        290,330,290,300]);
-##    hold off;
-##
-##	% Boucle sur les pas de temps
-##	% ---------------------------
-##    for k = 1:N_t
-##        LL_k = zeros(Nbpt,1);
-##        
-##        % Calcul du second membre F a l instant k*delta t
-##        % -----------------------------------------------
-##		% A COMPLETER EN UTILISANT LA ROUTINE f_t.m et le terme precedent (donne par UU)
-##		LL_k = ...;
-##
-##		% inversion
-##		% ----------
-##		% tilde_AA ET tilde_LL_k SONT LA MATRICE EF ET LE VECTEUR SECOND MEMBRE
-##		% APRES PSEUDO_ELIMINATION 
-##		% ECRIRE LA ROUTINE elimine.m ET INSERER L APPEL A CETTE ROUTINE
-##		% A UN ENDROIT APPROPRIE
-##        UU = tilde_AA\tilde_LL_k;
-##        TT = ...;
-##
-##        % visualisation 
-##		& -------------
-##        pause(0.05)
-##        affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(k*delta_t)]);
-##        axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
-##            290,330,290,320]);
-##    end
-##end
-##
-##%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-##%                                                        fin de la routine
-##%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%2020
+
+    % visualisation
+    % -------------
+    figure;
+    hold on;
+    affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(0)]);
+    axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
+        290,330,290,300]);
+    hold off;
+
+	% Boucle sur les pas de temps
+	% ---------------------------
+    for k = 1:N_t
+        LL_k = zeros(Nbpt,1);
+        % Calcul du second membre F a l instant k*delta t
+        % -----------------------------------------------
+        for I = 1:Nbpt
+          FF(I) = f_t(Coorneu(I,1), Coorneu(I,2), k * delta_t);
+        end
+		    LL_k = MM*(FF + (1/delta_t)*UU);
+        AA = alpha*MM + KK;
+        [tilde_AA,tilde_LL_k] = elimine(AA, LL_k, Refneu);
+		    % inversion
+		    % ----------
+        UU = tilde_AA\tilde_LL_k;
+        TT = UU + T_Gamma;
+
+        % visualisation 
+		    % -------------
+        pause(0.05)
+        affiche(TT, Numtri, Coorneu, ['Temps = ', num2str(k*delta_t)]);
+        axis([min(Coorneu(:,1)),max(Coorneu(:,1)),min(Coorneu(:,2)),max(Coorneu(:,2)),...
+            290,330,290,320]);
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                        fin de la routine
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%2020
 
