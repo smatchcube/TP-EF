@@ -44,7 +44,7 @@ nom_maillage = 'geomChaleur.msh' ;
 
 % pour choisir quelle type de problème résoudre (en choisir uniquement un)
 pb_stationnaire_Dirichlet   = 'non'; % exercice 1   (ne pas oublier de changer
-pb_stationnaire_Dirichlet = 'non'; % exercice 2     les fonctions appropriées
+pb_stationnaire_Fourier = 'non'; % exercice 2     les fonctions appropriées
 pb_temporel               = 'oui'; % exercice 3        f, Tc, sigma_1 et sigma_2) 
 
 % declarations
