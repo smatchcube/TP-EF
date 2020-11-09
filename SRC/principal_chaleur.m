@@ -43,7 +43,7 @@ nom_maillage = 'geomChaleur.msh' ;
 [Nbpt,Nbtri,Coorneu,Refneu,Numtri,Reftri,Nbaretes,Numaretes,Refaretes]=lecture_msh(nom_maillage);
 
 % pour choisir quelle type de problème résoudre (en choisir uniquement un)
-pb_stationnaire_Fourier   = 'non'; % exercice 1   (ne pas oublier de changer
+pb_stationnaire_Dirichlet   = 'non'; % exercice 1   (ne pas oublier de changer
 pb_stationnaire_Dirichlet = 'non'; % exercice 2     les fonctions appropriées
 pb_temporel               = 'oui'; % exercice 3        f, Tc, sigma_1 et sigma_2) 
 
@@ -80,8 +80,8 @@ for I = 1:Nbpt
     FF(I) = f(Coorneu(I,1), Coorneu(I,2));
 end
 
-% code spécifique pour résoudre le problème de Fourier (exercice 1)
-if strcmp(pb_stationnaire_Fourier, 'oui')
+% code spécifique pour résoudre le problème de Dirichlet (exercice 1)
+if strcmp(pb_stationnaire_Dirichlet, 'oui')
   AA = alpha*MM+KK;
   LL = MM * FF;
   % on réalise la pseudo élimination seulement dans l'exercice 1
@@ -90,7 +90,8 @@ if strcmp(pb_stationnaire_Fourier, 'oui')
   UU = UU + T_Gamma;
 end
 
-if strcmp(pb_stationnaire_Dirichlet, 'oui')
+% code spécifique pour résoudre le problème de Fourier (exercice 2)
+if strcmp(pb_stationnaire_Fourier, 'oui')
   % calcul de Tc approché
   for I = 1:Nbpt
     TT_c(I) = Tc(Coorneu(I,1), Coorneu(I,2));
