@@ -35,7 +35,7 @@
 h = 0.05;
 alpha = 1;
 lambda = 1;
-T_Gamma = 0;
+T_Gamma = 290;
 
 % génération et chargement du maillage et constantes
 system(['gmsh -2 -clmax ' num2str(h) ' -clmin ' num2str(h) ' geomChaleur.geo']);
@@ -148,7 +148,6 @@ if strcmp(pb_temporel,'oui')
     delta_t = 0.01;
     alpha = 1/delta_t;
     N_t = (Tps_final-Tps_initial)/delta_t; % le nombre d'iterations necessaires
-    T_Gamma = 290;
     % on initialise la condition initiale
     % -----------------------------------
     T_initial = zeros(Nbpt,1);
